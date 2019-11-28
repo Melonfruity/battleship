@@ -106,6 +106,30 @@ deployShip(playerOne.board, testDestroyer, false, '00');
 console.log(testDestroyer);
 console.log(playerOne.board);
 
+
+const moveShip = (board, ship, direction, head) => {
+
+  //if(!board[`${head[0]}${head[1]}`].occupied)
+
+  board[`${head[0]}${head[1]}`].tile.style[`background-color`] = `white`;
+  console.log(ship.components[0], ship.components[ship.length - 1])
+  ship.components.map(component => {
+    console.log(board[`${component[0]}${Number(component[1] + 1)}`]);
+    return `${component[0]}${Number(component[1] + 1)}`;
+  });
+  console.log(ship.components)
+}
+
+let i = 0;
+document.addEventListener('keydown', (e) => {
+  // d - 68
+  if(e.keyCode === 68){
+    moveShip(playerOne.board, testCarrier, false, `${testCarrier.components[0]}`);
+    i ++;
+    console.log(i, e.keyCode)
+  }
+});
+
 const resetGame = () => {
   playerOne.ships.forEach(ship => {
     ship.status = `inactive`;
