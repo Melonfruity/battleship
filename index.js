@@ -44,3 +44,22 @@ const createGrid = (board, player) => {
 // Create the grids
 createGrid(playerOneBoard, playerOne);
 createGrid(playerTwoBoard, playerTwo);
+
+// Make the ships
+const battleShipFactory = () => {
+  
+  const battleShipLengths = [5, 4, 3, 3, 2];
+
+  const battleShips = battleShipLengths.reduce((ships, length) => {
+    let battleShipObj = {length: length, status: 'inactive', components: []};
+    for(let i = 0; i < length; i ++){
+      battleShipObj.components.push(false);
+    }
+    ships.push(battleShipObj);
+    return ships;
+  }, [])
+  return battleShips;
+}
+
+playerOne.ships = battleShipFactory();
+playerTwo.ships = battleShipFactory();
