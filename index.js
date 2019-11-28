@@ -96,3 +96,12 @@ const deployShip = (board, ship, direction, head) => {
     console.log(ship.status);
   }
 }
+
+const testCarrier = playerOne.ships[0];
+const testDestroyer = playerOne.ships[4];
+
+deployShip(playerOne.board, testCarrier, false, '00');
+console.log(testCarrier)
+deployShip(playerOne.board, testDestroyer, false, '00');
+console.log(testDestroyer);
+console.log(playerOne.board);
