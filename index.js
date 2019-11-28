@@ -9,6 +9,24 @@ const playerTwoBoard = document.querySelector('#playerTwoBoard');
 const gridSize = 400;
 const dimensions = 10;
 
+// Returns new coordinates depending on key
+const newDir = {
+  87: (x, y) => `${x}${Number(y) - 1}`,
+  65: (x, y) => `${Number(x) - 1}${y}`,
+  83: (x, y) => `${x}${Number(y) + 1}`,
+  68: (x, y) => `${Number(x) + 1}${y}`,
+  73: (x, y) => `${x}${Number(y) - 1}`,
+  74: (x, y) => `${Number(x) - 1}${y}`,
+  75: (x, y) => `${x}${Number(y) + 1}`,
+  76: (x, y) => `${Number(x) + 1}${y}`,
+}
+
+// w: 87  i: 73  up
+// a: 65  j: 74  left
+// s: 83  k: 75  down
+// d: 68  l: 76  right
+
+
 // Create the Grid, Tiles, and adding the tile objects for referencing to the player object
 const createGrid = (board, player) => {
   // Create the dimensions and border of a board
@@ -107,30 +125,45 @@ deployShip(playerOne.board, testDestroyer, false, '00');
 console.log(testDestroyer);
 console.log(playerOne.board);
 
+const moveShip = (board, ship, direction, keyCode) => {
+  
+  // board[`${head[0]}${head[1]}`].tile.style[`background-color`] = `white`;
 
-const moveShip = (board, ship, direction, head) => {
-  const tail = ship.components[ship.length - 1];
-  if(tail[0] !== `${letters.length - 1}` && tail[1] !== `${letters.length - 1}`){
-    board[`${head[0]}${head[1]}`].tile.style[`background-color`] = `white`;
-    ship.components = ship.components.map(c => {
-      const newPos = `${c[0]}${Number(c[1]) + 1}`;
-      board[newPos].tile.style[`background-color`] = 'black';
-      return newPos;
-    })
+  let comp = ship.components;
+
+  if(!checkIfMoveable(board, ship, direction, keyCode)) return;
+
+  comp = comp.map(c => {  
+    board[newPos].tile.style[`background-color`] = 'black';
+    return newPos;
+  })
+}
+
+const checkIfMoveable = (board, ship, direction, keyCode) => {
+  const c = ship.components; // components
+  const head = [c[0][0], c[0][1]]; // x, y
+  const tail = `${c[c.length - 1][0]}${c[c.length - 1][1]}`;
+  
+  if(keyCode === 87 || keyCode === 73){
+    // y of head cannot be 0
+    return head[1] != 0; // type coersion
+  } else if(keyCode === 65 || keyCode === 74){
+    return head[0] != 0;
+  } else if(keyCode === 83 || keyCode === 75){
+    return tail[1] != 9;
+  } else if(keyCode === 68 || keyCode === 76){
+    return tail[0] != 9;
   }
 }
 
 document.addEventListener('keydown', (e) => {
-  // d - 68
-  if(e.keyCode === 68){
-    moveShip(playerOne.board, testCarrier, false, `${testCarrier.components[0]}`);
-  }
+  moveShip(playerOne.board, testCarrier, true, e.keyCode);
 });
 
 const resetGame = () => {
   playerOne.ships.forEach(ship => {
     ship.status = `inactive`;
-    ship.components.forEach(component => false);
+    ship.components.forEach(c => false);
   })
   Object.keys(playerOne.board).forEach(key => {
     const tile = playerOne.board[key]
