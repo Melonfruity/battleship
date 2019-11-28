@@ -105,3 +105,15 @@ console.log(testCarrier)
 deployShip(playerOne.board, testDestroyer, false, '00');
 console.log(testDestroyer);
 console.log(playerOne.board);
+
+const resetGame = () => {
+  playerOne.ships.forEach(ship => {
+    ship.status = `inactive`;
+    ship.components.forEach(component => false);
+  })
+  Object.keys(playerOne.board).forEach(key => {
+    const tile = playerOne.board[key]
+    tile.tile.style[`background-color`] = `white`;
+    tile.occupied = false;
+  })
+}
