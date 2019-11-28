@@ -7,6 +7,7 @@ const playerOneBoard = document.querySelector('#playerOneBoard');
 const playerTwoBoard = document.querySelector('#playerTwoBoard');
 
 const gridSize = 400;
+const dimensions = 10;
 
 // Create the Grid, Tiles, and adding the tile objects for referencing to the player object
 const createGrid = (board, player) => {
@@ -108,25 +109,21 @@ console.log(playerOne.board);
 
 
 const moveShip = (board, ship, direction, head) => {
-
-  //if(!board[`${head[0]}${head[1]}`].occupied)
-
-  board[`${head[0]}${head[1]}`].tile.style[`background-color`] = `white`;
-  console.log(ship.components[0], ship.components[ship.length - 1])
-  ship.components.map(component => {
-    console.log(board[`${component[0]}${Number(component[1] + 1)}`]);
-    return `${component[0]}${Number(component[1] + 1)}`;
-  });
-  console.log(ship.components)
+  const tail = ship.components[ship.length - 1];
+  if(tail[0] !== `${letters.length - 1}` && tail[1] !== `${letters.length - 1}`){
+    board[`${head[0]}${head[1]}`].tile.style[`background-color`] = `white`;
+    ship.components = ship.components.map(c => {
+      const newPos = `${c[0]}${Number(c[1]) + 1}`;
+      board[newPos].tile.style[`background-color`] = 'black';
+      return newPos;
+    })
+  }
 }
 
-let i = 0;
 document.addEventListener('keydown', (e) => {
   // d - 68
   if(e.keyCode === 68){
     moveShip(playerOne.board, testCarrier, false, `${testCarrier.components[0]}`);
-    i ++;
-    console.log(i, e.keyCode)
   }
 });
 
