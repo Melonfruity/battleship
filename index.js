@@ -63,3 +63,36 @@ const battleShipFactory = () => {
 
 playerOne.ships = battleShipFactory();
 playerTwo.ships = battleShipFactory();
+
+// BattleShip placement will always start from the battleship's index 0,
+// regardless of whether it is placed vertically or horizontally.
+// A1 to E1 = (0, 0) to (5, 0) map carrier -> component[0] = (0, 0), ... component[5] = (5, 0)
+// A1 to A5 = (0, 0) to (0, 5) map carrier -> component[0] = (0, 0), ... component[5] = (0, 5)
+// Checks: 
+// 1. The length from E1 to A1 === carrier.length
+// 2. Every A1 to E1 occupied === false, change to true after or fill with carrier id
+// 3. Vertical placement or Horizontal placement, so use X or Y coordinate.
+
+const deployShip = (board, ship, direction, head) => {
+  // true = horizontal
+  // false = vertical
+  // console.log(board, ship, direction, head)
+  // Checks if the needed tiles are available, if not return. If available occupy it.
+  if(ship.status === 'inactive'){
+    for(let i = 0; i < ship.length; i ++){
+      const coord = direction ? `${Number(head[0]) + i}${head[1]}` :`${head[0]}${Number(head[1]) + i}`
+      if(board[coord].occupied){
+        console.log('cant place there')
+        return;
+      }
+    }
+    for(let i = 0; i < ship.length; i ++){
+      const coord = direction ? `${Number(head[0]) + i}${head[1]}` :`${head[0]}${Number(head[1]) + i}`
+      board[coord].occupied = true;
+      board[coord].tile.style[`background-color`] = `black`;
+      ship.components[i] = coord;
+    }
+    ship.status = `active`;
+    console.log(ship.status);
+  }
+}
