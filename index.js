@@ -113,7 +113,7 @@ const deployShip = (board, ship, direction, head) => {
     for(let i = 0; i < ship.length; i ++){
       const coord = direction ? `${Number(head[0]) + i}${head[1]}` :`${head[0]}${Number(head[1]) + i}`
       board[coord].occupied = true;
-      board[coord].tile.style[`background-color`] = `black`;
+      board[coord].tile.style[`background-color`] = `brown`;
       ship.components[i] = coord;
     }
     ship.status = `active`;
@@ -121,58 +121,74 @@ const deployShip = (board, ship, direction, head) => {
   }
 }
 
-const testCarrier = playerOne.ships[`carrier`];
+/* const testCarrier = playerOne.ships[`carrier`];
 const testDestroyer = playerOne.ships[`destroyer`];
 
 deployShip(playerOne.board, testCarrier, false, '00');
-console.log(testCarrier)
-deployShip(playerOne.board, testDestroyer, false, '00');
-console.log(testDestroyer);
-console.log(playerOne.board);
+deployShip(playerOne.board, testDestroyer, false, '10'); */
 
-const moveShip = (board, ship, direction, keyCode) => {
+playerOne.ships[testDestroyer.id].components
+  .forEach(c => {
+    playerOne.board[c].tile.style[`background-color`] = `black`;
+  })
 
+const moveShip = (player, ship, direction, keyCode) => {
+  
   let comp = ship.components;
 
-  if(!checkIfMoveable(board, ship, direction, keyCode)) return;
-
-  playerOne.ships[ship.id].components = comp.map((c, i) => {
-    
-    const curr = `${c[0]}${c[1]}`;
-    const next = newPos[keyCode](c[0],c[1]);
-    
-    if(board[curr].occupied) {
-      board[curr].tile.style[`background-color`] = `brown`;
-    } else if(!(keyCode === 83 || keyCode === 75)) {
-      board[curr].tile.style[`background-color`] = `white`;
-    } else if(i === 0) {
-      board[curr].tile.style[`background-color`] = `white`;
-    }  
-    board[next].tile.style[`background-color`] = `black`;
+  // Changes the color of the tile based on the occupancy
+  const changeTile = c => {
+    const next = newPos[keyCode](c[0], c[1]);
+    const curr = c;
+    if(player.board[curr].occupied){
+      player.board[curr].tile.style[`background-color`] = `brown`;
+    } else {
+      player.board[curr].tile.style[`background-color`] = `white`;
+    }
+    player.board[next].tile.style[`background-color`] = `black`;
+    console.log('next', next, 'curr', curr);
     return next;
-  })
-}
+  }
 
-const checkIfMoveable = (board, ship, direction, keyCode) => {
-  const c = ship.components; // components
-  const head = [c[0][0], c[0][1]]; // x, y
-  const tail = `${c[c.length - 1][0]}${c[c.length - 1][1]}`;
+  if(!checkIfValid(player.board, ship, direction, keyCode)) return;
   
-  if(keyCode === 87 || keyCode === 73){
-    // y of head cannot be 0
-    return head[1] != 0; // type coersion
-  } else if(keyCode === 65 || keyCode === 74){
-    return head[0] != 0;
-  } else if(keyCode === 83 || keyCode === 75){
-    return tail[1] != 9;
-  } else if(keyCode === 68 || keyCode === 76){
-    return tail[0] != 9;
+  if(keyCode === 83 || keyCode === 73){
+    player.ships[ship.id].components = comp
+      .reverse()
+      .map(c => changeTile(c))
+      .reverse()
+  } else {
+    player.ships[ship.id].components = comp
+      .map(c => changeTile(c));
   }
 }
 
+const checkIfValid = (board, ship, direction, keyCode) => {
+  const c = ship.components; // components
+  console.log(c)
+  const head = [c[0][0], c[0][1]]; // x, y
+  const tail = `${c[c.length - 1][0]}${c[c.length - 1][1]}`;
+  // Checks if the ship can be moved
+  let moveAble = true;
+
+  if(keyCode === 87 || keyCode === 73){
+    // y of head cannot be 0
+    moveAble = head[1] != 0; // type coersion
+  } else if(keyCode === 65 || keyCode === 74){
+    moveAble = head[0] != 0;
+  } else if(keyCode === 83 || keyCode === 75){
+    moveAble = tail[1] != 9;
+  } else if(keyCode === 68 || keyCode === 76){
+    moveAble = tail[0] != 9;
+  }
+  return moveAble;
+}
+
 document.addEventListener('keydown', (e) => {
-  moveShip(playerOne.board, testCarrier, true, e.keyCode);
+  moveShip(playerOne, testDestroyer, true, e.keyCode);
 });
+
+
 
 /*
 const resetGame = () => {
