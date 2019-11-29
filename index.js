@@ -10,7 +10,7 @@ const gridSize = 400;
 const dimensions = 10;
 
 // Returns new coordinates depending on key
-const newDir = {
+const newPos = {
   87: (x, y) => `${x}${Number(y) - 1}`,
   65: (x, y) => `${Number(x) - 1}${y}`,
   83: (x, y) => `${x}${Number(y) + 1}`,
@@ -68,15 +68,20 @@ createGrid(playerTwoBoard, playerTwo);
 const battleShipFactory = () => {
   
   const battleShipLengths = [5, 4, 3, 3, 2];
-
-  const battleShips = battleShipLengths.reduce((ships, length) => {
-    let battleShipObj = {length: length, status: 'inactive', components: []};
+  const battleShipId = ['carrier', 'battleship','cruiser', 'submarine', 'destroyer'];
+  const battleShipArray = battleShipLengths.reduce((ships, length, i) => {
+    let battleShipObj = {id: battleShipId[i], length: length, status: 'inactive', components: []};
+    
     for(let i = 0; i < length; i ++){
       battleShipObj.components.push(false);
     }
     ships.push(battleShipObj);
     return ships;
-  }, [])
+  }, []);
+  const battleShips = battleShipArray.reduce((names, ship, i) => {
+    names[battleShipId[i]] = ship;
+    return names;    
+  }, {}) 
   return battleShips;
 }
 
@@ -116,8 +121,8 @@ const deployShip = (board, ship, direction, head) => {
   }
 }
 
-const testCarrier = playerOne.ships[0];
-const testDestroyer = playerOne.ships[4];
+const testCarrier = playerOne.ships[`carrier`];
+const testDestroyer = playerOne.ships[`destroyer`];
 
 deployShip(playerOne.board, testCarrier, false, '00');
 console.log(testCarrier)
@@ -126,16 +131,25 @@ console.log(testDestroyer);
 console.log(playerOne.board);
 
 const moveShip = (board, ship, direction, keyCode) => {
-  
-  // board[`${head[0]}${head[1]}`].tile.style[`background-color`] = `white`;
 
   let comp = ship.components;
 
   if(!checkIfMoveable(board, ship, direction, keyCode)) return;
 
-  comp = comp.map(c => {  
-    board[newPos].tile.style[`background-color`] = 'black';
-    return newPos;
+  playerOne.ships[ship.id].components = comp.map((c, i) => {
+    
+    const curr = `${c[0]}${c[1]}`;
+    const next = newPos[keyCode](c[0],c[1]);
+    
+    if(board[curr].occupied) {
+      board[curr].tile.style[`background-color`] = `brown`;
+    } else if(!(keyCode === 83 || keyCode === 75)) {
+      board[curr].tile.style[`background-color`] = `white`;
+    } else if(i === 0) {
+      board[curr].tile.style[`background-color`] = `white`;
+    }  
+    board[next].tile.style[`background-color`] = `black`;
+    return next;
   })
 }
 
@@ -160,6 +174,7 @@ document.addEventListener('keydown', (e) => {
   moveShip(playerOne.board, testCarrier, true, e.keyCode);
 });
 
+/*
 const resetGame = () => {
   playerOne.ships.forEach(ship => {
     ship.status = `inactive`;
@@ -170,4 +185,4 @@ const resetGame = () => {
     tile.tile.style[`background-color`] = `white`;
     tile.occupied = false;
   })
-}
+} */
