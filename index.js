@@ -55,7 +55,7 @@ const validKeyCodes = {
   70: true,
 }
 
-
+let crossHair = `${Math.floor(dimensions/2)}${Math.floor(dimensions/2)}`;
 // Size of board
 // const createLettersArray use fromCharCode 65 - 91
 // Create the Grid, Tiles, and adding the tile objects for referencing to the player object
@@ -331,7 +331,9 @@ const resetGame = () => {
   }
   deployingShips(currentPlayer);
 };
+const playGame = (currentPlayer) => {
 
+};
 // Create the grids
 createGrid(playerOneBoard, playerOne);
 createGrid(playerTwoBoard, playerTwo);
@@ -348,5 +350,9 @@ document.addEventListener('keydown', (e) => {
     console.log('Moving a ship')
     moveShip(currentPlayer, shipId, e.keyCode);
   }
-
+  if(validKeyCodes[e.keyCode] && gameStarted){
+    console.log('Moving Crosshair');
+  }
 });
+
+resetButton.addEventListener('click', () => resetGame());
