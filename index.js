@@ -22,9 +22,9 @@ const battleShipLengths = [5, 4, 3, 3, 2];
 const battleShipId = ['carrier', 'battleship', 'cruiser', 'submarine', 'destroyer'];
 
 // Ship deployment and game start flags
-let currentPlayer = playerOne;
-let gameStarted = false;
-let shipId = battleShipId[0];
+let currentPlayer = playerOne; // Can random this
+let gameStarted = false; // Game started flag
+let shipId = battleShipId[0]; // Initial ship
 let direction = true; // Current direction of a ship (vertical: true or horizontal: false)
 
 // Returns new coordinates depending on key code
@@ -156,7 +156,6 @@ const battleShipFactory = (player) => {
   player.ships = battleShips;
 };
 const moveShip = (player, shipId, keyCode) => {
-  
   // Let deployShip function decide which ship is going to be moving
   let ship = player.ships[shipId];
   let comp = ship.components;
@@ -171,7 +170,6 @@ const moveShip = (player, shipId, keyCode) => {
       player.board[curr].tile.style[`background-color`] = `white`;
     }
     player.board[next].tile.style[`background-color`] = `black`;
-    // console.log('next', next, 'curr', curr);
     return next;
   }
   
@@ -180,7 +178,6 @@ const moveShip = (player, shipId, keyCode) => {
     if(!checkIfMoveable(ship, keyCode)) return;
 
     // Vertical fix and Horizontal fix 83 s 68 d
-    console.log(keyCode, direction, keyCode === 68 && !direction)
     if((keyCode === 83 && direction) || (keyCode === 68)){
       player.ships[shipId].components = comp
         .reverse()
@@ -211,7 +208,7 @@ const deployShip = (player, shipId, comp) => {
       })
     // Always start vertically
     direction = true;
-    deployingShips(player);  
+    deployingShips(player);
   } else {
     return false;
   }
@@ -235,7 +232,6 @@ const changeDirection = (player, shipId, comp) => {
 };
 const checkIfMoveable = (ship, keyCode) => {
   const c = ship.components; // components
-  console.log(c)
   const head = [c[0][0], c[0][1]]; // x, y
   const tail = `${c[c.length - 1][0]}${c[c.length - 1][1]}`;
   // Checks if the ship can be moved
@@ -253,9 +249,9 @@ const checkIfMoveable = (ship, keyCode) => {
   }
   return moveAble;
 };
-const checkIfDeployable = (player, ship) => {
+const checkIfDeployable = (player, shipId) => {
   // If there is a true in any tile the current ship is currently hovering then you cannot deploy
-  const checkIfAvailable = player.ships[ship].components.map((c) => {
+  const checkIfAvailable = player.ships[shipId].components.map((c) => {
     if(player.board[c].occupiedBy) return false;
       return true;
   })
@@ -290,9 +286,10 @@ const deployingShips = (player) => {
   console.table(playerOne.ships)
   console.table(playerTwo.board)
   console.table(playerTwo.ships)
-   */console.log(playerOne.id, 'has deployed all ships:', playerOne.deployedAllShips)
+  console.log(playerOne.id, 'has deployed all ships:', playerOne.deployedAllShips)
   console.log(playerTwo.id, 'has deployed all ships:', playerTwo.deployedAllShips)
   console.log('CurrentPlayer',currentPlayer.id, 'Deploying', shipId, 'Game started:', gameStarted);
+  */
 }
 const readyTheField = (player) => {
   Object.keys(player.board).forEach(key => {
@@ -301,11 +298,10 @@ const readyTheField = (player) => {
   })
 };
 const resetGame = () => {
-  
+
   playerOne.deployedAllShips = false;
   playerTwo.deployedAllShips = false;
 
-  currentPlayer = playerOne;
   gameStarted = false;
   shipId = battleShipId[0];
   direction = true; 
@@ -329,6 +325,9 @@ const resetGame = () => {
     p2Ship.components = p2Ship.components.map((c, i) => `0${i}`);
     p2Ship.status = 'inactive';
   }
+
+  currentPlayer = playerOne;
+  
   deployingShips(currentPlayer);
 };
 const playGame = (currentPlayer) => {
@@ -347,11 +346,9 @@ deployingShips(currentPlayer);
 
 document.addEventListener('keydown', (e) => {
   if(validKeyCodes[e.keyCode] && !gameStarted){
-    console.log('Moving a ship')
     moveShip(currentPlayer, shipId, e.keyCode);
   }
   if(validKeyCodes[e.keyCode] && gameStarted){
-    console.log('Moving Crosshair');
   }
 });
 
