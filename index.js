@@ -2,6 +2,9 @@
 const playerOne = {id: 'p1', deployedAllShips: false};
 const playerTwo = {id: 'p2', deployedAllShips: false};
 
+playerOne.nextPlayer = playerTwo;
+playerTwo.nextPlayer = playerOne;
+
 const container = document.querySelector('#container');
 const playerOneBoard = document.querySelector('#playerOneBoard');
 const playerTwoBoard = document.querySelector('#playerTwoBoard');
@@ -14,7 +17,12 @@ const dimensions = 10;
 // Info for ships
 const battleShipLengths = [5, 4, 3, 3, 2];
 const battleShipId = ['carrier', 'battleship','cruiser', 'submarine', 'destroyer'];
-  
+
+// Ship deployment and game start flags
+let currentPlayer = playerOne;
+let gameStarted = false;
+let shipId = battleShipId[0];
+
 // Returns new coordinates depending on key
 const newPos = {
   87: (x, y) => `${x}${Number(y) - 1}`,
@@ -28,24 +36,20 @@ const newPos = {
 }
 
 // Valid key codes to play with
-const validKeyCodes = {
-  87: true,
-  65: true,
-  83: true,
-  68: true,
-  73: true,
-  74: true,
-  75: true,
-  76: true,
-  13: true,
-  70: true,
-}
 // w: 87  i: 73  up
 // a: 65  j: 74  left
 // s: 83  k: 75  down
 // d: 68  l: 76  right
 // enter: 13 r: 82 (change direction);
 // f: 70
+const validKeyCodes = {
+  87: true,
+  65: true,
+  83: true,
+  68: true,
+  13: true,
+  70: true,
+}
 
 // Current direction of a ship (vertical: true or horizontal: false)
 let direction = true;
@@ -109,14 +113,6 @@ const battleShipFactory = (player) => {
   }, {}) 
   player.ships = battleShips;
 };
-
-// Create the grids
-createGrid(playerOneBoard, playerOne);
-createGrid(playerTwoBoard, playerTwo);
-
-battleShipFactory(playerOne);
-battleShipFactory(playerTwo);
-
 const moveShip = (player, shipId, keyCode) => {
   
   // Let deployShip function decide which ship is going to be moving
@@ -141,8 +137,9 @@ const moveShip = (player, shipId, keyCode) => {
     //If the ship is at the boundaries
     if(!checkIfMoveable(ship, keyCode)) return;
 
-    // Vertical fix and Horizontal fix
-    if((keyCode === 83 && direction) || (keyCode === 68 && !direction)){
+    // Vertical fix and Horizontal fix 83 s 68 d
+    console.log(keyCode, direction, keyCode === 68 && !direction)
+    if((keyCode === 83 && direction) || (keyCode === 68)){
       player.ships[shipId].components = comp
         .reverse()
         .map(c => changeTile(c))
@@ -187,6 +184,8 @@ const deployShip = (player, shipId, comp) => {
         player.board[c].tile.style[`background-color`] = `brown`;
         return c;
       })
+    // Always start vertically
+    direction = true;
     deployingShips(player);  
   } else {
     return false;
@@ -221,14 +220,6 @@ const checkIfDeployable = (player, ship) => {
   return !checkIfAvailable.includes(false)
 }
 
-// use the deploy function to call deploying to deploy next until p2
-let currentPlayer = playerOne;
-let gameStarted = false;
-let shipId = battleShipId[0];
-
-playerOne.nextPlayer = playerTwo;
-playerTwo.nextPlayer = playerOne;
-
 const deployingShips = (player) => {
   
   const battleShipKeys = Object.keys(player.ships);
@@ -259,18 +250,6 @@ const deployingShips = (player) => {
   console.log('CurrentPlayer',currentPlayer.id, 'Deploying', shipId, 'Game started:', gameStarted);
 }
 
-document.addEventListener('keydown', (e) => {
-  if(validKeyCodes[e.keyCode] && !gameStarted){
-    console.log('Here')
-    moveShip(currentPlayer, shipId, e.keyCode);
-  }
-});
-
-document.addEventListener('click', (e) => {
-  if(e.target.className === `${playerOne.id}tile` || e.target.className === `${playerTwo.id}tile`){
-    console.log(e.target.id);
-  }
-})
 /*
 const resetGame = () => {
   playerOne.ships.forEach(ship => {
@@ -283,3 +262,24 @@ const resetGame = () => {
     tile.occupied = false;
   })
 } */
+
+// Use the deploy function to call deploying to deploy next until p2
+// Create the grids
+createGrid(playerOneBoard, playerOne);
+createGrid(playerTwoBoard, playerTwo);
+
+battleShipFactory(playerOne);
+battleShipFactory(playerTwo);
+
+document.addEventListener('keydown', (e) => {
+  if(validKeyCodes[e.keyCode] && !gameStarted){
+    console.log('Here')
+    moveShip(currentPlayer, shipId, e.keyCode);
+  }
+});
+
+document.addEventListener('click', (e) => {
+  if(e.target.className === `${playerOne.id}tile` || e.target.className === `${playerTwo.id}tile`){
+    console.log(e.target.id);
+  }
+})
