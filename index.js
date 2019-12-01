@@ -6,7 +6,7 @@ playerOne.nextPlayer = playerTwo;
 playerTwo.nextPlayer = playerOne;
 
 const container = document.querySelector('#container');
-const resetButton = document.querySelector('#reset');
+// const resetButton = document.querySelector('#reset');
 const playerOneBoard = document.querySelector('#playerOneBoard');
 const playerTwoBoard = document.querySelector('#playerTwoBoard');
 const columns = Array.from(document.querySelectorAll('.letters'));
@@ -38,23 +38,21 @@ const newPos = {
   75: (x, y) => `${x}${Number(y) + 1}`,
   76: (x, y) => `${Number(x) + 1}${y}`,
 };
-
 const validKeyCodes = {
   // Valid key codes to play with
   // w: 87  i: 73  up
   // a: 65  j: 74  left
   // s: 83  k: 75  down
-  // d: 68  l: 76  right
-  // enter: 13 r: 82 (change direction);
-  // f: 70
+  // d: 68  l: 76  right 
+  // f: 70  r: 82 reset
+  // enter: 13
   87: true,
   65: true,
   83: true,
   68: true,
   13: true,
   70: true,
-}
-
+};
 let crossHair = `${Math.floor(dimensions/2)}${Math.floor(dimensions/2)}`;
 // Size of board
 // const createLettersArray use fromCharCode 65 - 91
@@ -350,6 +348,9 @@ document.addEventListener('keydown', (e) => {
   }
   if(validKeyCodes[e.keyCode] && gameStarted){
   }
+  if(e.keyCode === 82){
+    resetGame();
+  }
 });
 
-resetButton.addEventListener('click', () => resetGame());
+// resetButton.addEventListener('click', () => resetGame());
