@@ -13,9 +13,9 @@ const columns = Array.from(document.querySelectorAll('.letters'));
 const rows = Array.from(document.querySelectorAll('.numbers'));
 
 // Info for the board
+const dimensions = 10; // Row & Columns
 const letters = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I','J'];
 const gridSize = 400; // 400 x 400 px
-const dimensions = 10; // Row & Columns
 
 // Info for ships
 const battleShipLengths = [5, 4, 3, 3, 2];
