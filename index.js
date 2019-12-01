@@ -294,6 +294,12 @@ const deployingShips = (player) => {
   console.log(playerTwo.id, 'has deployed all ships:', playerTwo.deployedAllShips)
   console.log('CurrentPlayer',currentPlayer.id, 'Deploying', shipId, 'Game started:', gameStarted);
 }
+const readyTheField = (player) => {
+  Object.keys(player.board).forEach(key => {
+    playerOne.board[key].tile.style[`background-color`] = `blue`;
+    playerTwo.board[key].tile.style[`background-color`] = `blue`;
+  })
+};
 
 // Create the grids
 createGrid(playerOneBoard, playerOne);
