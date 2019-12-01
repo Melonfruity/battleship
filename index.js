@@ -304,7 +304,7 @@ const readyTheField = (player) => {
 // Create the grids
 createGrid(playerOneBoard, playerOne);
 createGrid(playerTwoBoard, playerTwo);
-
+coordinateContext(columns, rows, letters);
 
 // Creating ship
 battleShipFactory(playerOne);
