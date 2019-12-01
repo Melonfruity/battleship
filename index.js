@@ -1,4 +1,4 @@
-const letters = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I','J'];
+// Initial player objects
 const playerOne = {id: 'p1', deployedAllShips: false};
 const playerTwo = {id: 'p2', deployedAllShips: false};
 
@@ -6,9 +6,15 @@ const container = document.querySelector('#container');
 const playerOneBoard = document.querySelector('#playerOneBoard');
 const playerTwoBoard = document.querySelector('#playerTwoBoard');
 
+// Info for the board
+const letters = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I','J'];
 const gridSize = 400;
 const dimensions = 10;
 
+// Info for ships
+const battleShipLengths = [5, 4, 3, 3, 2];
+const battleShipId = ['carrier', 'battleship','cruiser', 'submarine', 'destroyer'];
+  
 // Returns new coordinates depending on key
 const newPos = {
   87: (x, y) => `${x}${Number(y) - 1}`,
@@ -21,15 +27,16 @@ const newPos = {
   76: (x, y) => `${Number(x) + 1}${y}`,
 }
 
+// Valid key codes to play with
 const validKeyCodes = {
   87: true,
   65: true,
   83: true,
   68: true,
-/*   73: true,
+  73: true,
   74: true,
   75: true,
-  76: true, */
+  76: true,
   13: true,
   70: true,
 }
@@ -39,6 +46,9 @@ const validKeyCodes = {
 // d: 68  l: 76  right
 // enter: 13 r: 82 (change direction);
 // f: 70
+
+// Current direction of a ship (vertical: true or horizontal: false)
+let direction = true;
 
 // Create the Grid, Tiles, and adding the tile objects for referencing to the player object
 const createGrid = (board, player) => {
@@ -56,10 +66,11 @@ const createGrid = (board, player) => {
   for (let i = 0; i < 100; i++){
     let columnIndex = i % 10;
     let rowIndex = Math.floor( i / 10);
-    let id = `${player.id}${letters[columnIndex]}${rowIndex + 1}`;
+    let id = `${letters[columnIndex]}${rowIndex + 1}`;
     const gridItem = document.createElement('div');
       gridItem.style.cssText = `border: 1px solid black`;
       gridItem.id = id;
+      gridItem.className = `${player.id}tile`;
     board.appendChild(gridItem);
     
     // Referencing
@@ -77,8 +88,6 @@ const createGrid = (board, player) => {
 // Make the ships
 const battleShipFactory = (player) => {
   
-  const battleShipLengths = [5, 4, 3, 3, 2];
-  const battleShipId = ['carrier', 'battleship','cruiser', 'submarine', 'destroyer'];
   const battleShipArray = battleShipLengths.reduce((ships, length, i) => {
     let battleShipObj = {
       id: battleShipId[i], 
@@ -108,8 +117,6 @@ createGrid(playerTwoBoard, playerTwo);
 battleShipFactory(playerOne);
 battleShipFactory(playerTwo);
 
-direction = true;
-
 const moveShip = (player, shipId, keyCode) => {
   
   // Let deployShip function decide which ship is going to be moving
@@ -134,6 +141,7 @@ const moveShip = (player, shipId, keyCode) => {
     //If the ship is at the boundaries
     if(!checkIfMoveable(ship, keyCode)) return;
 
+    // Vertical fix and Horizontal fix
     if((keyCode === 83 && direction) || (keyCode === 68 && !direction)){
       player.ships[shipId].components = comp
         .reverse()
@@ -145,37 +153,45 @@ const moveShip = (player, shipId, keyCode) => {
     }
   } else if(keyCode === 13){
     // Deploys and maps a battleship
-    if(checkIfDeployable(player, shipId)){
-      player.ships[shipId].status = 'deployed';
-      player.ships[shipId].components = comp
-        .map((c, i) => {
-          player.board[c].occupiedBy = shipId;
-          player.board[c].componentIndex = i;
-          return c;
-        })
-    } else {
-      return false;
-    }
-  } else if(keyCode === 70) {
-    direction = !direction;
-    player.ships[shipId].components = comp
-      .map(c => {
-        const next = `${c[1]}${c[0]}`;
-        const curr = `${c[0]}${c[1]}`;
-        if(player.board[curr].occupiedBy){
-          player.board[curr].tile.style[`background-color`] = `brown`;
-        } else {
-          player.board[curr].tile.style[`background-color`] = `white`;
-        }
-        player.board[next].tile.style[`background-color`] = `black`;
-        // console.log('next', next, 'curr', curr);
-        return next;
-      });
+    deployShip(player, shipId, comp);
+  } else if(keyCode === 70){
+    changeDirection(player, shipId, comp);
   } else {
     return;
   }
 }
-
+const changeDirection = (player, shipId, comp) => {
+  direction = !direction;
+  player.ships[shipId].components = comp
+    .map(c => {
+      // This inverts the original coordinates. This also eliminates
+      // a potential boundary issue, but makes game quality worse?
+      const next = `${c[1]}${c[0]}`;
+      const curr = `${c[0]}${c[1]}`;
+      if(player.board[curr].occupiedBy){
+        player.board[curr].tile.style[`background-color`] = `brown`;
+      } else {
+        player.board[curr].tile.style[`background-color`] = `white`;
+      }
+      player.board[next].tile.style[`background-color`] = `black`;
+      return next;
+    });
+}
+const deployShip = (player, shipId, comp) => {
+  if(checkIfDeployable(player, shipId)){
+    player.ships[shipId].status = 'deployed';
+    player.ships[shipId].components = comp
+      .map((c, i) => {
+        player.board[c].occupiedBy = shipId;
+        player.board[c].componentIndex = i;
+        player.board[c].tile.style[`background-color`] = `brown`;
+        return c;
+      })
+    deployingShips(player);  
+  } else {
+    return false;
+  }
+}
 const checkIfMoveable = (ship, keyCode) => {
   const c = ship.components; // components
   console.log(c)
@@ -196,7 +212,6 @@ const checkIfMoveable = (ship, keyCode) => {
   }
   return moveAble;
 }
-
 const checkIfDeployable = (player, ship) => {
   // If there is a true in any tile the current ship is currently hovering then you cannot deploy
   const checkIfAvailable = player.ships[ship].components.map((c) => {
@@ -206,54 +221,56 @@ const checkIfDeployable = (player, ship) => {
   return !checkIfAvailable.includes(false)
 }
 
-// BattleShip placement will always start from the battleship's index 0,
-// regardless of whether it is placed vertically or horizontally.
-// A1 to E1 = (0, 0) to (5, 0) map carrier -> component[0] = (0, 0), ... component[5] = (5, 0)
-// A1 to A5 = (0, 0) to (0, 5) map carrier -> component[0] = (0, 0), ... component[5] = (0, 5)
-// Checks: 
-// 1. The length from E1 to A1 === carrier.length
-// 2. Every A1 to E1 occupied === false, change to true after or fill with carrier id
-// 3. Vertical placement or Horizontal placement, so use X or Y coordinate.
+// use the deploy function to call deploying to deploy next until p2
+let currentPlayer = playerOne;
+let gameStarted = false;
+let shipId = battleShipId[0];
+
+playerOne.nextPlayer = playerTwo;
+playerTwo.nextPlayer = playerOne;
 
 const deployingShips = (player) => {
-  // true = horizontal
-  // false = vertical
-  // console.log(board, ship, direction, head)
-  // Checks if the needed tiles are available, if not return. If available occupy it.
-  console.log(player.board);
-  console.log(player.ships);
-  /* playerOne.ships[testDestroyer.id].components
-  .forEach(c => {
-    playerOne.board[c].tile.style[`background-color`] = `black`;
-  }) */
-
-  // Go to the playerX's ships then get a Objkey of the ships. This array will be used to
-  // iterate through the board. I should use a while loop for until deployed is true. The
-  // ships to be deployed will be made black first. Status should be set to deploying and
-  // deployed after moving is done.
-
+  
   const battleShipKeys = Object.keys(player.ships);
-
   console.log(battleShipKeys)
-
-  // Check which ships have not been deployed, if all ships have been then set the deployed all player ship flag to true
   console.log(player.deployedAllShips);
+  for(let i = 0; i < battleShipKeys.length; i ++){
+    if(player.ships[battleShipKeys[i]].status === 'inactive'){
+      shipId = player.ships[battleShipKeys[i]].id;
+      break;
+    }
+    if(i === battleShipKeys.length - 1){
+      player.deployedAllShips = true;
+      if(playerOne.deployedAllShips && playerTwo.deployedAllShips){
+        console.table(playerOne.board)
+        console.table(playerOne.ships)
+        console.table(playerOne.board)
+        console.table(playerOne.ships)
+        gameStarted = true;
+      } else {
+        currentPlayer = player.nextPlayer;
+        shipId = battleShipId[0];
+      }
+    }
+  }
+  // Check if all players have deployed their ships
+  console.log(playerOne.id, 'has deployed all ships:', playerOne.deployedAllShips)
+  console.log(playerTwo.id, 'has deployed all ships:', playerTwo.deployedAllShips)
+  console.log('CurrentPlayer',currentPlayer.id, 'Deploying', shipId, 'Game started:', gameStarted);
 }
 
-const testCarrier = playerOne.ships[`carrier`];
-const testDestroyer = playerOne.ships[`destroyer`];
-
-let currentPlayer = playerOne;
-
-// Deploy e: 69, o:79
-
 document.addEventListener('keydown', (e) => {
-  if(validKeyCodes[e.keyCode]){
-    console.log(e.keyCode)
-    moveShip(currentPlayer, `destroyer`, e.keyCode);
+  if(validKeyCodes[e.keyCode] && !gameStarted){
+    console.log('Here')
+    moveShip(currentPlayer, shipId, e.keyCode);
   }
 });
 
+document.addEventListener('click', (e) => {
+  if(e.target.className === `${playerOne.id}tile` || e.target.className === `${playerTwo.id}tile`){
+    console.log(e.target.id);
+  }
+})
 /*
 const resetGame = () => {
   playerOne.ships.forEach(ship => {
