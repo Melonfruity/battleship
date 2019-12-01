@@ -300,6 +300,37 @@ const readyTheField = (player) => {
     playerTwo.board[key].tile.style[`background-color`] = `blue`;
   })
 };
+const resetGame = () => {
+  
+  playerOne.deployedAllShips = false;
+  playerTwo.deployedAllShips = false;
+
+  currentPlayer = playerOne;
+  gameStarted = false;
+  shipId = battleShipId[0];
+  direction = true; 
+
+  for(key in playerOne.board){
+    const p1Tile = playerOne.board[key];
+    const p2Tile = playerTwo.board[key];
+    p1Tile.tile.style[`background-color`] = `white`;
+    p1Tile.componentIndex = false;
+    p1Tile.occupiedBy = false;
+    p2Tile.tile.style[`background-color`] = `white`;
+    p2Tile.componentIndex = false;
+    p2Tile.occupiedBy = false;
+  }
+
+  for(key in playerOne.ships){
+    const p1Ship = playerOne.ships[key];
+    const p2Ship = playerTwo.ships[key];
+    p1Ship.components = p1Ship.components.map((c, i) => `0${i}`);
+    p1Ship.status = 'inactive';
+    p2Ship.components = p2Ship.components.map((c, i) => `0${i}`);
+    p2Ship.status = 'inactive';
+  }
+  deployingShips(currentPlayer);
+};
 
 // Create the grids
 createGrid(playerOneBoard, playerOne);
