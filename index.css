@@ -1,17 +1,15 @@
 #container {
-  display: flex;
-  align-items: flex-end;
-  top: 200px;
-  width: 50%;
+  width: 100%;
   margin-top: 100px;
   margin-left: auto;
   margin-right: auto;
 }
 
 #playerTwoBoard, #playerOneBoard, #numbers{
-  float: left;
+  display: block;
 }
 
+/*
 #reset {
   height: 30px;
   width: 120px;
@@ -24,4 +22,4 @@
 
 #reset:hover {
   background-color: #0d53c4;
-}
+} */

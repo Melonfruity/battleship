@@ -27,6 +27,10 @@ let gameStarted = false; // Game started flag
 let shipId = battleShipId[0]; // Initial ship
 let direction = true; // Current direction of a ship (vertical: true or horizontal: false)
 
+// Game play
+let crossHair = {
+  components: [`${Math.floor(dimensions/2)}${Math.floor(dimensions/2)}`]
+};
 // Returns new coordinates depending on key code
 const newPos = {
   87: (x, y) => `${x}${Number(y) - 1}`,
@@ -53,7 +57,6 @@ const validKeyCodes = {
   13: true,
   70: true,
 };
-let crossHair = `${Math.floor(dimensions/2)}${Math.floor(dimensions/2)}`;
 // Size of board
 // const createLettersArray use fromCharCode 65 - 91
 // Create the Grid, Tiles, and adding the tile objects for referencing to the player object
@@ -153,23 +156,11 @@ const battleShipFactory = (player) => {
   player.shipsLeft = battleShipId.length;
   player.ships = battleShips;
 };
+// Deployment phase
 const moveShip = (player, shipId, keyCode) => {
   // Let deployShip function decide which ship is going to be moving
   let ship = player.ships[shipId];
   let comp = ship.components;
-
-  // Changes the color of the tile based on the occupancy
-  const changeTile = c => {
-    const next = newPos[keyCode](c[0], c[1]);
-    const curr = c;
-    if(player.board[curr].occupiedBy){
-      player.board[curr].tile.style[`background-color`] = `brown`;
-    } else {
-      player.board[curr].tile.style[`background-color`] = `white`;
-    }
-    player.board[next].tile.style[`background-color`] = `black`;
-    return next;
-  }
   
   if(keyCode !== 13 && keyCode !== 70){
     //If the ship is at the boundaries
@@ -179,11 +170,11 @@ const moveShip = (player, shipId, keyCode) => {
     if((keyCode === 83 && direction) || (keyCode === 68)){
       player.ships[shipId].components = comp
         .reverse()
-        .map(c => changeTile(c))
+        .map(c => changeTile(c, keyCode, player))
         .reverse()
     } else {
       player.ships[shipId].components = comp
-        .map(c => changeTile(c));
+        .map(c => changeTile(c, keyCode, player));
     }
   } else if(keyCode === 13){
     // Deploys and maps a battleship
@@ -193,6 +184,29 @@ const moveShip = (player, shipId, keyCode) => {
   } else {
     return;
   }
+};
+// Changes the color of the tile based on the occupancy
+const changeTile = (c, keyCode, player) => {
+  const next = newPos[keyCode](c[0], c[1]);
+  const curr = c;
+  if(!gameStarted){
+    if(player.board[curr].occupiedBy){
+      player.board[curr].tile.style[`background-color`] = `brown`;
+    } else {
+      player.board[curr].tile.style[`background-color`] = `white`;
+    }
+    player.board[next].tile.style[`background-color`] = `black`;
+    return next;
+  } 
+  const isItDamaged = player.board[curr].componentIndex;
+
+  if(!player.board[curr].occupiedBy || isItDamaged !== true){
+    player.board[curr].tile.style[`background-color`] = `blue`;
+  } else {
+    player.board[curr].tile.style[`background-color`] = isItDamaged === true ? `brown` : `blue`;
+  }
+  player.board[next].tile.style[`background-color`] = `red`;
+  return next;  
 };
 const deployShip = (player, shipId, comp) => {
   if(checkIfDeployable(player, shipId)){
@@ -235,14 +249,14 @@ const checkIfMoveable = (ship, keyCode) => {
   // Checks if the ship can be moved
   let moveAble = true;
 
-  if(keyCode === 87 || keyCode === 73){
+  if(keyCode === 87){
     // y of head cannot be 0, same case for 9 and all directions
     moveAble = head[1] != 0; // type coersion
-  } else if(keyCode === 65 || keyCode === 74){
+  } else if(keyCode === 65){
     moveAble = head[0] != 0;
-  } else if(keyCode === 83 || keyCode === 75){
+  } else if(keyCode === 83){
     moveAble = tail[1] != 9;
-  } else if(keyCode === 68 || keyCode === 76){
+  } else if(keyCode === 68){
     moveAble = tail[0] != 9;
   }
   return moveAble;
@@ -294,7 +308,25 @@ const readyTheField = (player) => {
     playerOne.board[key].tile.style[`background-color`] = `blue`;
     playerTwo.board[key].tile.style[`background-color`] = `blue`;
   })
+  playGame(player);
 };
+// Playing phase
+const playGame = (currentPlayer) => {
+  currentPlayer.board[crossHair.components[0]].tile.style[`background-color`] = `red`;
+};
+const checkEndConditions = () => {
+  return false;
+};
+const moveCrossHair = (player, keyCode) => {
+  
+  if(keyCode !== 13 && keyCode !== 70){
+    //If the crosshair is at the boundaries
+    if(!checkIfMoveable(crossHair, keyCode)) return;
+      console.log(crossHair, crossHair.components)
+      crossHair.components[0] = changeTile(crossHair.components[0], keyCode, player);
+  }
+};
+// Resetting the game
 const resetGame = () => {
 
   playerOne.deployedAllShips = false;
@@ -328,9 +360,6 @@ const resetGame = () => {
   
   deployingShips(currentPlayer);
 };
-const playGame = (currentPlayer) => {
-
-};
 // Create the grids
 createGrid(playerOneBoard, playerOne);
 createGrid(playerTwoBoard, playerTwo);
@@ -347,6 +376,7 @@ document.addEventListener('keydown', (e) => {
     moveShip(currentPlayer, shipId, e.keyCode);
   }
   if(validKeyCodes[e.keyCode] && gameStarted){
+    moveCrossHair(currentPlayer, e.keyCode);
   }
   if(e.keyCode === 82){
     resetGame();
