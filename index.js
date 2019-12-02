@@ -324,6 +324,20 @@ const moveCrossHair = (player, keyCode) => {
     if(!checkIfMoveable(crossHair, keyCode)) return;
       console.log(crossHair, crossHair.components)
       crossHair.components[0] = changeTile(crossHair.components[0], keyCode, player);
+  } else if(keyCode === 13){
+    if(player.board[crossHair.components[0]].occupiedBy){
+      const shipId = player.board[crossHair.components[0]].occupiedBy;
+      const shipComponentIndex = player.board[crossHair.components[0]].componentIndex;
+      player.board[crossHair.components[0]].componentIndex = true;
+      player.ships[shipId].status = `damaged`;
+      console.log('Hit:', shipId, shipComponentIndex);
+      player.board[crossHair.components[0]].tile.style[`background-color`] = `brown`;
+      currentPlayer = player.nextPlayer;
+    } else {
+      player.board[crossHair.components[0]].tile.style[`background-color`] = `blue`;
+      currentPlayer = player.nextPlayer;
+      console.log('Miss');
+    }
   }
 };
 // Resetting the game
