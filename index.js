@@ -1,6 +1,6 @@
 // Initial player and board objects
-let playerOne = {id: 'p1', deployedAllShips: false};
-let playerTwo = {id: 'p2', deployedAllShips: false};
+let playerOne = {id: 'p1', deployedAllShips: false, score: 0};
+let playerTwo = {id: 'p2', deployedAllShips: false, score: 0};
 
 playerOne.nextPlayer = playerTwo;
 playerTwo.nextPlayer = playerOne;
@@ -10,6 +10,7 @@ const playerTwoBoard = document.querySelector('#playerTwoBoard');
 const columns = Array.from(document.querySelectorAll('.letters'));
 const rows = Array.from(document.querySelectorAll('.numbers'));
 const log = document.getElementById('log');
+const scoreBoard = document.getElementById('scoreBoard');
 
 // Info for the board
 const dimensions = 10; // Row & Columns
@@ -44,7 +45,7 @@ const newPos = {
   75: (x, y) => `${x}${Number(y) + 1}`,
   76: (x, y) => `${Number(x) + 1}${y}`,
   vertical: (length) => `${Math.floor(Math.random() * (dimensions - 1))}${Math.floor(Math.random() * (dimensions - length))}`,
-  horizontal: (length) => `${Math.floor(Math.random() * (dimensions - length))}${Math.floor(Math.random() * (dimensions - 1))}`,
+  horizontal: (length) => `${Math.floor(Math.random() * (dimensions - length))}${Math.floor(Math.random() * (dimensions - 1))}`, 
 };
 
 const validKeyCodes = {
@@ -350,12 +351,19 @@ const moveCrossHair = (currentB, keyCode) => {
       currentB.ships[shipId].status = `damaged`;
     
       if (currentB.ships[shipId].length > 0) {
-        checkIfAllShipsSunk(currentB, currentB.ships);
+        currentB.ships[shipId].length -= 1;
+        if (checkIfAllShipsSunk(currentB.ships)) {
+          gameEnd = true;
+          currentB.nextPlayer.score += 1;
+          scoreBoard.textContent = `${playerOne.id}: ${playerOne.score} | ${playerTwo.id}: ${playerTwo.score}`;
+          logger(`${currentB.nextPlayer.id} WON!`);
+          return;
+        }
       }
 
       logger(`${currentB.nextPlayer.id} hits on: ${currentB.board[crossHair.components[0]].id}`);
       currentB.board[crossHair.components[0]].tile.style[`background-color`] = `brown`;
-      currentBoard = currentB.nextPlayer;
+      currentBoard = currentB.nextPlayer
       !computer ? playGame(currentBoard) : computerPlay(currentBoard);
     } else {
       currentB.board[crossHair.components[0]].tile.style[`background-color`] = `blue`;
@@ -367,15 +375,10 @@ const moveCrossHair = (currentB, keyCode) => {
 };
 
 // Checks Endgame condition
-const checkIfAllShipsSunk = (currentB, ships) => {
-  currentB.ships[shipId].length -= 1;
+const checkIfAllShipsSunk = (ships) => {
   const shipsSunk = Object.keys(ships).filter(key => ships[key].length === 0);
   logger(`Sunken ships of: ${currentBoard.id} ${shipsSunk}`);
-  if (shipsSunk.length === 5) {
-    gameEnd = true;
-    logger(`${currentB.nextPlayer.id} WON!`);
-    return;
-  }
+  return shipsSunk.length === 5;
 };
 
 const computerPlay = (currentB) => {
@@ -391,9 +394,17 @@ const computerPlay = (currentB) => {
       if (boardLocation.occupiedBy) {
         boardLocation.tile.style[`background-color`] = `brown`;
         currentB.ships[boardLocation.occupiedBy].status = `damaged`;
-        currentB.ships[boardLocation.occupiedBy].length -= 1;
         logger(`Computer hits on ${hitLocation}`);
-        checkIfAllShipsSunk(currentB, currentB.ships);
+        if (currentB.ships[boardLocation.occupiedBy].length > 0) {
+          currentB.ships[boardLocation.occupiedBy].length -= 1;
+          if (checkIfAllShipsSunk(currentB.ships)) {
+            gameEnd = true;
+            currentB.nextPlayer.score += 1;
+            scoreBoard.textContent = `${playerOne.id}: ${playerOne.score} | ${playerTwo.id}: ${playerTwo.score}`;
+            logger(`${currentB.nextPlayer.id} WON!`);
+            return;
+          }
+        }
       } else {
         logger(`Computer misses on ${hitLocation}`);
         currentB.board[hitLocation].tile.style[`background-color`] = `blue`;
@@ -402,13 +413,13 @@ const computerPlay = (currentB) => {
       computerPlaying = false;
     }
   }
-  currentBoard = currentB.nextPlayer;
+  currentBoard = currentB.nextPlayer
   playGame(currentBoard);
-};
+}
 
 const computerDeployShips = (currentB) => {
 
-  for (let i = 0; i < 5; i ++) {
+  for(let i = 0; i < 5; i ++){
 
     let shipId = battleShipId[i];
     let direction = Math.round(Math.random()) === 0 ? true : false;
@@ -418,17 +429,17 @@ const computerDeployShips = (currentB) => {
     const randomPosition = currentB.ships[shipId].components.map((c, i) => {
       const x = direction ? `${startingLocation[0]}` : `${Number(startingLocation[0]) + i}`;
       const y = direction ? `${Number(startingLocation[1]) + i}` : `${startingLocation[1]}`;
-      const coordinates = `${x}${y}`;
+      const coordinates =`${x}${y}`;
       return coordinates;
     });
 
-    if (checkIfAIDeployable(currentB, randomPosition)) {
+    if(checkIfAIDeployable(currentB, randomPosition)){
       currentB.ships[shipId].components = randomPosition;
       randomPosition.forEach(p => {
         currentB.board[p].tile.style[`background-color`] = `brown`;
         currentB.board[p].occupiedBy = shipId;
         currentB.board[p].componentIndex = i;
-      });
+      })
     } else {
       // Try again if random spot is invalid
       i --;
@@ -439,17 +450,17 @@ const computerDeployShips = (currentB) => {
   currentB.deployedAllShips = true;
   
   if (!currentB.nextPlayer.deployedAllShips) {
-    currentBoard = currentBoard.nextPlayer;
+    currentBoard = currentBoard.nextPlayer
     deployingShips(currentBoard);
   } else {
     gameStarted = true;
     playGame(currentBoard);
   }
-};
+}
 
 const checkIfAIDeployable = (currentB, positions) => {
   // If there is a true in any tile the current ship is currently hovering then you cannot deploy
-  return !positions.map(p => currentB.board[p].occupiedBy ? false : true).includes(false);
+  return !positions.map(p => currentB.board[p].occupiedBy ? false : true ).includes(false);
 };
 
 const logger = (text) => {
@@ -457,17 +468,17 @@ const logger = (text) => {
   newLog.textContent = `- ${text}`;
   log.appendChild(newLog);
   log.scrollTop = log.scrollHeight; // Scroll to the bottom of the div
-};
+}
 
 const resetParent = (parent) => {
   while (parent.firstChild) {
     parent.removeChild(parent.firstChild);
   }
-};
+}
 
 // Resetting the game
 const resetGame = () => {
-
+  
   // Initial flags and values
   playerOne.deployedAllShips = false;
   playerTwo.deployedAllShips = false;
@@ -491,6 +502,7 @@ const resetGame = () => {
   computer ? currentBoard.id === 'p1' ? deployingShips(currentBoard) : computerDeployShips(currentBoard) : deployingShips(currentBoard);
 };
 
+scoreBoard.textContent = `${playerOne.id}: ${playerOne.score} | ${playerTwo.id}: ${playerTwo.score}`
 coordinateContext(columns, rows, letters);
 resetGame();
 
@@ -503,6 +515,7 @@ document.addEventListener('keydown', (e) => {
     resetGame();
   } else if (e.keyCode === 67) {
     computer = !computer;
+    scoreBoard.textContent = `${playerOne.id}: ${playerOne.score = 0} | ${playerTwo.id}: ${playerTwo.score = 0}`
     resetGame();
   }
 });
