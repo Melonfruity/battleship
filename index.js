@@ -368,15 +368,16 @@ const moveCrossHair = (player, keyCode) => {
       console.log(player.nextPlayer.id, 'hits on:', player.board[crossHair.components[0]].id);
       player.board[crossHair.components[0]].tile.style[`background-color`] = `brown`;
 
-      currentPlayer = player.nextPlayer;
     } else {
       player.board[crossHair.components[0]].tile.style[`background-color`] = `blue`;
-      currentPlayer = player.nextPlayer;
       console.log(player.id, 'misses on', player.board[crossHair.components[0]].id);
+    }
+    if (!computer) {
+      currentPlayer = player.nextPlayer;
     }
   }
 
-  playGame(currentPlayer);
+  computer ? playGame(currentPlayer) : computerPlay();
 
 };
 
@@ -386,7 +387,7 @@ const checkIfAllShipsSunk = (ships) => {
   return shipsSunk.length === 5;
 };
 const computerPlay = () => {
-  
+
 }
 
 const computerDeployShip = (player) => {
@@ -420,8 +421,9 @@ const computerDeployShip = (player) => {
       i --;
     }
   }
-    
-  currentPlayer = player.nextPlayer;
+  readyTheField(player);
+  gameStarted = true;
+  Math.round(Math.random()) === 0 ? playGame(currentPlayer) : computerPlay();
 }
 
 const checkIfAIDeployable = (player, positions) => {
@@ -472,7 +474,7 @@ const resetGame = () => {
   }
 
   currentPlayer = computer ? playerOne : Math.round(Math.random()) === 0 ? playerOne : playerTwo;
-  
+  console.log(currentPlayer.id, 'is first'); 
   deployingShips(currentPlayer);
 };
 
@@ -484,7 +486,6 @@ coordinateContext(columns, rows, letters);
 // Creating ship
 battleShipFactory(playerOne);
 battleShipFactory(playerTwo);
-
 console.log(currentPlayer.id, 'is first');
 deployingShips(currentPlayer);
 
@@ -496,8 +497,8 @@ document.addEventListener('keydown', (e) => {
   } else if (e.keyCode === 82) {
     resetGame();
   } else if (e.keyCode === 67) {
+    computer = !computer;
     console.log('Computer is playing:', computer);
-    computer = true //!computer;
     resetGame();
   }
 });
