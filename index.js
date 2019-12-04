@@ -385,36 +385,56 @@ const checkIfAllShipsSunk = (ships) => {
   console.log('Sunken ships of:', currentPlayer.id, shipsSunk);
   return shipsSunk.length === 5;
 };
+const computerPlay = () => {
+  
+}
 
 const computerDeployShip = (player) => {
-  // I can just make it so that playerTwo is auto first player
-  // Go through each ship, select the head or components[0]
-  // random a starting location, check the length or vertical starting from the start location
-  // to see if there is a ship or if the spot is valid
-  // map the ship and components like a player would to the tile
 
-  // 
-  /* for (let shipId in player.ships) {
-    console.log(shipId, player.ships[shipId]);
-  } */
-  let direction = Math.floor(Math.random()) === 0 ? true : false;
-  let startingLocation = undefined;
-  if(direction){
-    startingLocation = newPos.vertical(player.ships[shipId].length);
-  } else {
-    startingLocation = newPos.horizontal(player.ships[shipId].length);  
+  for(let i = 0; i < 5; i ++){
+
+    let shipId = battleShipId[i];
+    let direction = Math.round(Math.random()) === 0 ? true : false;
+    let startingLocation = undefined;
+    if(direction){
+      startingLocation = newPos.vertical(player.ships[battleShipId[i]].length);
+    } else {
+      startingLocation = newPos.horizontal(player.ships[battleShipId[i]].length);
+    }
+
+    const randomPosition = player.ships[shipId].components.map((c, i) => {
+      const x = direction ? `${startingLocation[0]}` : `${Number(startingLocation[0]) + i}`;
+      const y = direction ? `${Number(startingLocation[1]) + i}` : `${startingLocation[1]}`;
+      const coordinates =`${x}${y}`;
+      return coordinates;
+    });
+
+    if(checkIfAIDeployable(player, randomPosition)){
+      player.ships[shipId].components = randomPosition;
+      randomPosition.forEach(p => {
+        player.board[p].tile.style[`background-color`] = `brown`;
+        player.board[p].occupiedBy = shipId;
+        player.board[p].componentIndex = i;
+      })
+    } else {
+      i --;
+    }
   }
-  console.log(startingLocation, direction, player.ships[shipId], player.ships[shipId].length);
-  /* player.ships[shipId].components = player.ships[shipId].components.map((c, i) => {
-    const x = `${(startLocation[0])}`;
-    const y = startLocation[1];
-    return `${x}${y}`;
-  });
-  console.log(player.ships[shipId].components);
-  console.log(checkIfDeployable(player, shipId));
-   */
-  // currentPlayer = player.nextPlayer;
+    
+  currentPlayer = player.nextPlayer;
 }
+
+const checkIfAIDeployable = (player, positions) => {
+  // If there is a true in any tile the current ship is currently hovering then you cannot deploy
+  const checkIfAvailable = positions.map(p => {
+
+    if (player.board[p].occupiedBy) {
+      return false;
+    }
+    return true;
+  });
+  return !checkIfAvailable.includes(false);
+};
 
 // Resetting the game
 const resetGame = () => {
