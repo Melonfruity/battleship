@@ -30,6 +30,7 @@ let direction = true; // Current direction of a ship (vertical: true or horizont
 let crossHair = {
   components: [`${Math.floor(dimensions / 2)}${Math.floor(dimensions / 2)}`]
 };
+let computer = false;
 
 // Returns new coordinates depending on key code
 const newPos = {
@@ -41,6 +42,8 @@ const newPos = {
   74: (x, y) => `${Number(x) - 1}${y}`,
   75: (x, y) => `${x}${Number(y) + 1}`,
   76: (x, y) => `${Number(x) + 1}${y}`,
+  vertical: (length) => `${Math.floor(Math.random() * (dimensions - 1))}${Math.floor(Math.random() * (dimensions - length))}`,
+  horizontal: (length) => `${Math.floor(Math.random() * (dimensions - length))}${Math.floor(Math.random() * (dimensions - 1))}`, 
 };
 
 const validKeyCodes = {
@@ -101,7 +104,6 @@ const createGrid = (board, player) => {
   player.board = boardObject;
 
 };
-
 const coordinateContext = (columns, rows, letters) => {
 
   columns.forEach(column => {
@@ -145,7 +147,6 @@ const coordinateContext = (columns, rows, letters) => {
     }
   });
 };
-
 // Make the ships
 const battleShipFactory = (player) => {
   
@@ -172,7 +173,6 @@ const battleShipFactory = (player) => {
   player.shipsLeft = battleShipId.length;
   player.ships = battleShips;
 };
-
 // Deployment phase
 const moveShip = (player, shipId, keyCode) => {
   // Let deployShip function decide which ship is going to be moving
@@ -230,7 +230,6 @@ const changeTile = (c, keyCode, player) => {
   player.board[next].tile.style[`background-color`] = `red`;
   return next;
 };
-
 const deployShip = (player, shipId, comp) => {
 
   if (checkIfDeployable(player, shipId)) {
@@ -267,7 +266,6 @@ const changeDirection = (player, shipId, comp) => {
       return next;
     });
 };
-
 // Checks if block can be moved
 const checkIfMoveable = (ship, keyCode) => {
   
@@ -286,8 +284,8 @@ const checkIfMoveable = (ship, keyCode) => {
     return tail[0] !== '9';
   }
 };
-
 const checkIfDeployable = (player, shipId) => {
+  console.log(player, player.ships[shipId]);
   // If there is a true in any tile the current ship is currently hovering then you cannot deploy
   const checkIfAvailable = player.ships[shipId].components.map(c => {
     if (player.board[c].occupiedBy) {
@@ -295,7 +293,11 @@ const checkIfDeployable = (player, shipId) => {
     }
     return true;
   });
-  return !checkIfAvailable.includes(false);
+  if(checkIfAvailable.length < player.ships[shipId].components.length){
+    return false;
+  } else {
+    return !checkIfAvailable.includes(false);
+  }
 };
 
 const deployingShips = (player) => {
@@ -317,11 +319,11 @@ const deployingShips = (player) => {
       readyTheField(player);
       if (playerOne.deployedAllShips && playerTwo.deployedAllShips) {
         gameStarted = true;
-        playGame(currentPlayer);
+        playGame(currentPlayer); // play with computer
       } else {
         currentPlayer = player.nextPlayer;
         shipId = battleShipId[0];
-        deployingShips(currentPlayer);
+        computer ? computerDeployShip(currentPlayer) : deployingShips(currentPlayer);
       }
     }
   }
@@ -383,6 +385,37 @@ const checkIfAllShipsSunk = (ships) => {
   console.log('Sunken ships of:', currentPlayer.id, shipsSunk);
   return shipsSunk.length === 5;
 };
+
+const computerDeployShip = (player) => {
+  // I can just make it so that playerTwo is auto first player
+  // Go through each ship, select the head or components[0]
+  // random a starting location, check the length or vertical starting from the start location
+  // to see if there is a ship or if the spot is valid
+  // map the ship and components like a player would to the tile
+
+  // 
+  /* for (let shipId in player.ships) {
+    console.log(shipId, player.ships[shipId]);
+  } */
+  let direction = Math.floor(Math.random()) === 0 ? true : false;
+  let startingLocation = undefined;
+  if(direction){
+    startingLocation = newPos.vertical(player.ships[shipId].length);
+  } else {
+    startingLocation = newPos.horizontal(player.ships[shipId].length);  
+  }
+  console.log(startingLocation, direction, player.ships[shipId], player.ships[shipId].length);
+  /* player.ships[shipId].components = player.ships[shipId].components.map((c, i) => {
+    const x = `${(startLocation[0])}`;
+    const y = startLocation[1];
+    return `${x}${y}`;
+  });
+  console.log(player.ships[shipId].components);
+  console.log(checkIfDeployable(player, shipId));
+   */
+  // currentPlayer = player.nextPlayer;
+}
+
 // Resetting the game
 const resetGame = () => {
 
@@ -418,7 +451,7 @@ const resetGame = () => {
     p2Ship.length = p2Ship.components.length;
   }
 
-  currentPlayer = Math.round(Math.random()) === 0 ? playerOne : playerTwo;
+  currentPlayer = computer ? playerOne : Math.round(Math.random()) === 0 ? playerOne : playerTwo;
   
   deployingShips(currentPlayer);
 };
@@ -441,6 +474,10 @@ document.addEventListener('keydown', (e) => {
   } else if (validKeyCodes[e.keyCode] && gameStarted && !gameEnd) {
     moveCrossHair(currentPlayer, e.keyCode);
   } else if (e.keyCode === 82) {
+    resetGame();
+  } else if (e.keyCode === 67) {
+    console.log('Computer is playing:', computer);
+    computer = true //!computer;
     resetGame();
   }
 });
