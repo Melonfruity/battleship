@@ -472,7 +472,19 @@ const resetGame = () => {
   gameEnd = false;
   shipId = battleShipId[0];
   direction = true;
-  
+
+  while (playerOneBoard.firstChild) {
+    playerOneBoard.removeChild(playerOneBoard.firstChild);
+  }
+
+  while (playerTwoBoard.firstChild) {
+    playerTwoBoard.removeChild(playerTwoBoard.firstChild);
+  }
+  createGrid(playerOneBoard, playerOne);
+  createGrid(playerTwoBoard, playerTwo);
+  battleShipFactory(playerOne);
+  battleShipFactory(playerTwo);
+  /* 
   for (key in playerOne.board) {
     const p1Tile = playerOne.board[key];
     const p2Tile = playerTwo.board[key];
@@ -495,8 +507,8 @@ const resetGame = () => {
     p2Ship.components = p2Ship.components.map((c, i) => `0${i}`);
     p2Ship.status = 'inactive';
     p2Ship.length = p2Ship.components.length;
-  }
-  
+  } */
+
   currentBoard = Math.round(Math.random()) === 0 ? playerOne : playerTwo;
   resetLogger();
   logger(`${currentBoard.id} is first`);
@@ -507,6 +519,7 @@ const logger = (text) => {
   const newLog = document.createElement('p')
   newLog.textContent = `- ${text}`;
   log.appendChild(newLog);
+  log.scrollTop = log.scrollHeight;
 }
 
 const resetLogger = () => {
