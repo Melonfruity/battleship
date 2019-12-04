@@ -439,7 +439,7 @@ const computerDeployShips = (currentB) => {
     }
   }
   
-  readyTheField(currentB);
+  // readyTheField(currentB);
   currentB.deployedAllShips = true;
   if (!currentB.nextPlayer.deployedAllShips) {
     currentBoard = currentBoard.nextPlayer
@@ -452,19 +452,13 @@ const computerDeployShips = (currentB) => {
 
 const checkIfAIDeployable = (currentB, positions) => {
   // If there is a true in any tile the current ship is currently hovering then you cannot deploy
-  const checkIfAvailable = positions.map(p => {
-
-    if (currentB.board[p].occupiedBy) {
-      return false;
-    }
-    return true;
-  });
-  return !checkIfAvailable.includes(false);
+  return !positions.map(p => currentB.board[p].occupiedBy ? false : true ).includes(false);
 };
 
 // Resetting the game
 const resetGame = () => {
 
+  // Initial flags and values
   playerOne.deployedAllShips = false;
   playerTwo.deployedAllShips = false;
 
@@ -473,45 +467,19 @@ const resetGame = () => {
   shipId = battleShipId[0];
   direction = true;
 
-  while (playerOneBoard.firstChild) {
+  // Removes all original DOM elements and then creates new
+  while (playerOneBoard.firstChild || playerTwoBoard.firstChild) {
     playerOneBoard.removeChild(playerOneBoard.firstChild);
-  }
-
-  while (playerTwoBoard.firstChild) {
     playerTwoBoard.removeChild(playerTwoBoard.firstChild);
   }
   createGrid(playerOneBoard, playerOne);
   createGrid(playerTwoBoard, playerTwo);
   battleShipFactory(playerOne);
   battleShipFactory(playerTwo);
-  /* 
-  for (key in playerOne.board) {
-    const p1Tile = playerOne.board[key];
-    const p2Tile = playerTwo.board[key];
-    p1Tile.tile.style[`background-color`] = `white`;
-    playerOne.board[key].shotAt = false;
-    p1Tile.componentIndex = false;
-    p1Tile.occupiedBy = false;
-    p2Tile.tile.style[`background-color`] = `white`;
-    playerTwo.board[key].shotAt = false;
-    p2Tile.componentIndex = false;
-    p2Tile.occupiedBy = false;
-  }
-
-  for (key in playerOne.ships) {
-    const p1Ship = playerOne.ships[key];
-    const p2Ship = playerTwo.ships[key];
-    p1Ship.components = p1Ship.components.map((c, i) => `0${i}`);
-    p1Ship.status = 'inactive';
-    p1Ship.length = p1Ship.components.length;
-    p2Ship.components = p2Ship.components.map((c, i) => `0${i}`);
-    p2Ship.status = 'inactive';
-    p2Ship.length = p2Ship.components.length;
-  } */
-
+  
   currentBoard = Math.round(Math.random()) === 0 ? playerOne : playerTwo;
   resetLogger();
-  logger(`${currentBoard.id} is first`);
+  logger(`${currentBoard.id} is first | Computer is playing: ${computer}`);
   computer ? currentBoard.id === 'p1' ? deployingShips(currentBoard) : computerDeployShips(currentBoard) : deployingShips(currentBoard);
 };
 
@@ -528,16 +496,8 @@ const resetLogger = () => {
   }
 }
 
-// Create the grids
-createGrid(playerOneBoard, playerOne);
-createGrid(playerTwoBoard, playerTwo);
 coordinateContext(columns, rows, letters);
-
-// Creating ship
-battleShipFactory(playerOne);
-battleShipFactory(playerTwo);
-logger(`${currentBoard.id} is first`);
-deployingShips(currentBoard);
+resetGame();
 
 document.addEventListener('keydown', (e) => {
   if (validKeyCodes[e.keyCode] && !gameStarted && !gameEnd) {
@@ -548,7 +508,6 @@ document.addEventListener('keydown', (e) => {
     resetGame();
   } else if (e.keyCode === 67) {
     computer = !computer;
-    logger(`Computer is playing: ${computer}`);
     resetGame();
   }
 });
