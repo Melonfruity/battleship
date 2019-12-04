@@ -519,7 +519,7 @@ const logger = (text) => {
   const newLog = document.createElement('p')
   newLog.textContent = `- ${text}`;
   log.appendChild(newLog);
-  log.scrollTop = log.scrollHeight;
+  log.scrollTop = log.scrollHeight; // Scroll to the bottom of the div
 }
 
 const resetLogger = () => {
