@@ -1,4 +1,4 @@
-// Initial player objects
+// Initial player and board objects
 let playerOne = {id: 'p1', deployedAllShips: false};
 let playerTwo = {id: 'p2', deployedAllShips: false};
 
@@ -9,6 +9,7 @@ const playerOneBoard = document.querySelector('#playerOneBoard');
 const playerTwoBoard = document.querySelector('#playerTwoBoard');
 const columns = Array.from(document.querySelectorAll('.letters'));
 const rows = Array.from(document.querySelectorAll('.numbers'));
+const log = document.getElementById('log');
 
 // Info for the board
 const dimensions = 10; // Row & Columns
@@ -20,7 +21,7 @@ const battleShipLengths = [5, 4, 3, 3, 2];
 const battleShipId = ['carrier', 'battleship', 'cruiser', 'submarine', 'destroyer'];
 
 // Ship deployment and game start flags
-let currentPlayer = Math.round(Math.random()) === 0 ? playerOne : playerTwo;
+let currentBoard = Math.round(Math.random()) === 0 ? playerTwo : playerOne;
 let gameStarted = false; // Game started flag
 let gameEnd = false;
 let shipId = battleShipId[0]; // Initial ship
@@ -65,7 +66,7 @@ const validKeyCodes = {
 // Size of board
 // const createLettersArray use fromCharCode 65 - 91
 // Create the Grid, Tiles, and adding the tile objects for referencing to the player object
-const createGrid = (board, player) => {
+const createGrid = (board, currentB) => {
   // Create the dimensions and border of a board
   board.style.cssText = `
     display: grid;
@@ -87,7 +88,7 @@ const createGrid = (board, player) => {
     const gridItem = document.createElement('div');
     gridItem.style.cssText = `border: 1px solid black`;
     gridItem.id = id;
-    gridItem.className = `${player.id}tile`;
+    gridItem.className = `${currentB.id}tile`;
 
     board.appendChild(gridItem);
     
@@ -101,7 +102,7 @@ const createGrid = (board, player) => {
     };
   }
 
-  player.board = boardObject;
+  currentB.board = boardObject;
 
 };
 const coordinateContext = (columns, rows, letters) => {
@@ -148,7 +149,7 @@ const coordinateContext = (columns, rows, letters) => {
   });
 };
 // Make the ships
-const battleShipFactory = (player) => {
+const battleShipFactory = (currentB) => {
   
   const battleShipArray = battleShipLengths.reduce((ships, length, i) => {
     let battleShipObj = {
@@ -170,13 +171,13 @@ const battleShipFactory = (player) => {
     return names;
   }, {});
 
-  player.shipsLeft = battleShipId.length;
-  player.ships = battleShips;
+  currentB.shipsLeft = battleShipId.length;
+  currentB.ships = battleShips;
 };
 // Deployment phase
-const moveShip = (player, shipId, keyCode) => {
+const moveShip = (currentB, shipId, keyCode) => {
   // Let deployShip function decide which ship is going to be moving
-  let ship = player.ships[shipId];
+  let ship = currentB.ships[shipId];
   let comp = ship.components;
   
   if (keyCode !== 13 && keyCode !== 70) {
@@ -187,82 +188,82 @@ const moveShip = (player, shipId, keyCode) => {
 
     // Vertical fix and Horizontal fix 83 s 68 d
     if ((keyCode === 83 && direction) || (keyCode === 68)) {
-      player.ships[shipId].components = comp
+      currentB.ships[shipId].components = comp
         .reverse()
-        .map(c => changeTile(c, keyCode, player))
+        .map(c => changeTile(c, keyCode, currentB))
         .reverse();
     } else {
-      player.ships[shipId].components = comp
-        .map(c => changeTile(c, keyCode, player));
+      currentB.ships[shipId].components = comp
+        .map(c => changeTile(c, keyCode, currentB));
     }
   } else if (keyCode === 13) {
     // Deploys and maps a battleship
-    deployShip(player, shipId, comp);
+    deployShip(currentB, shipId, comp);
   } else if (keyCode === 70) {
-    changeDirection(player, shipId, comp);
+    changeDirection(currentB, shipId, comp);
   } else {
     return;
   }
 };
 // Changes the color of the tile based on the occupancy
-const changeTile = (c, keyCode, player) => {
+const changeTile = (c, keyCode, currentB) => {
 
   const next = newPos[keyCode](c[0], c[1]);
   const curr = c;
   
   if (!gameStarted) {
-    if (player.board[curr].occupiedBy) {
-      player.board[curr].tile.style[`background-color`] = `brown`;
+    if (currentB.board[curr].occupiedBy) {
+      currentB.board[curr].tile.style[`background-color`] = `brown`;
     } else {
-      player.board[curr].tile.style[`background-color`] = `white`;
+      currentB.board[curr].tile.style[`background-color`] = `white`;
     }
-    player.board[next].tile.style[`background-color`] = `black`;
+    currentB.board[next].tile.style[`background-color`] = `black`;
     return next;
   }
 
-  const isItDamaged = player.board[curr].componentIndex;
+  const isItDamaged = currentB.board[curr].componentIndex;
   
-  if (!player.board[curr].occupiedBy || isItDamaged !== true) {
-    player.board[curr].tile.style[`background-color`] = player.board[curr].shotAt ? `blue` : `gray`;
+  if (!currentB.board[curr].occupiedBy || isItDamaged !== true) {
+    currentB.board[curr].tile.style[`background-color`] = currentB.board[curr].shotAt ? `blue` : `gray`;
   } else {
-    player.board[curr].tile.style[`background-color`] = isItDamaged === true ? `brown` : `gray`;
+    currentB.board[curr].tile.style[`background-color`] = isItDamaged === true ? `brown` : `gray`;
   }
-  player.board[next].tile.style[`background-color`] = `red`;
+  currentB.board[next].tile.style[`background-color`] = `red`;
   return next;
 };
-const deployShip = (player, shipId, comp) => {
+const deployShip = (currentB, shipId, comp) => {
 
-  if (checkIfDeployable(player, shipId)) {
-    player.ships[shipId].status = 'deployed';
-    player.ships[shipId].components = comp
+  if (checkIfDeployable(currentB, shipId)) {
+    currentB.ships[shipId].status = 'deployed';
+    currentB.ships[shipId].components = comp
       .map((c, i) => {
-        player.board[c].occupiedBy = shipId;
-        player.board[c].componentIndex = i;
-        player.board[c].tile.style[`background-color`] = `brown`;
+        currentB.board[c].occupiedBy = shipId;
+        currentB.board[c].componentIndex = i;
+        currentB.board[c].tile.style[`background-color`] = `brown`;
         return c;
       });
     // Always start vertically
     direction = true;
-    deployingShips(player);
+    deployingShips(currentB);
   } else {
     return false;
   }
 };
-const changeDirection = (player, shipId, comp) => {
+const changeDirection = (currentB, shipId, comp) => {
 
   direction = !direction;
-  player.ships[shipId].components = comp
+  currentB.ships[shipId].components = comp
     .map(c => {
       // This inverts the original coordinates. This also eliminates
       // a potential boundary issue, but makes game quality worse?
       const next = `${c[1]}${c[0]}`;
       const curr = `${c[0]}${c[1]}`;
-      if (player.board[curr].occupiedBy) {
-        player.board[curr].tile.style[`background-color`] = `brown`;
+      if (currentB.board[curr].occupiedBy) {
+        currentB.board[curr].tile.style[`background-color`] = `brown`;
       } else {
-        player.board[curr].tile.style[`background-color`] = `white`;
+        currentB.board[curr].tile.style[`background-color`] = `white`;
       }
-      player.board[next].tile.style[`background-color`] = `black`;
+      currentB.board[next].tile.style[`background-color`] = `black`;
       return next;
     });
 };
@@ -284,153 +285,176 @@ const checkIfMoveable = (ship, keyCode) => {
     return tail[0] !== '9';
   }
 };
-const checkIfDeployable = (player, shipId) => {
-  console.log(player, player.ships[shipId]);
+const checkIfDeployable = (currentB, shipId) => {
   // If there is a true in any tile the current ship is currently hovering then you cannot deploy
-  const checkIfAvailable = player.ships[shipId].components.map(c => {
-    if (player.board[c].occupiedBy) {
+  const checkIfAvailable = currentB.ships[shipId].components.map(c => {
+    if (currentB.board[c].occupiedBy) {
       return false;
     }
     return true;
   });
-  if(checkIfAvailable.length < player.ships[shipId].components.length){
+  if(checkIfAvailable.length < currentB.ships[shipId].components.length){
     return false;
   } else {
     return !checkIfAvailable.includes(false);
   }
 };
 
-const deployingShips = (player) => {
+const deployingShips = (currentB) => {
 
-  const battleShipKeys = Object.keys(player.ships);
+  const battleShipKeys = Object.keys(currentB.ships);
   
   for (let i = 0; i < battleShipKeys.length; i ++) {
     
-    if (player.ships[battleShipKeys[i]].status === 'inactive') {
-      player.ships[battleShipKeys[i]].components.forEach(c => {
-        player.board[c].tile.style[`background-color`] = `black`;
+    if (currentB.ships[battleShipKeys[i]].status === 'inactive') {
+      currentB.ships[battleShipKeys[i]].components.forEach(c => {
+        currentB.board[c].tile.style[`background-color`] = `black`;
       });
-      shipId = player.ships[battleShipKeys[i]].id;
+      shipId = currentB.ships[battleShipKeys[i]].id;
       break;
     }
 
     if (i === battleShipKeys.length - 1) {
-      player.deployedAllShips = true;
-      readyTheField(player);
+      currentB.deployedAllShips = true;
+      readyTheField(currentB);
       if (playerOne.deployedAllShips && playerTwo.deployedAllShips) {
         gameStarted = true;
-        playGame(currentPlayer); // play with computer
+        computer ? computerPlay(currentBoard) : playGame(currentBoard);
       } else {
-        currentPlayer = player.nextPlayer;
+        currentBoard = currentB.nextPlayer;
         shipId = battleShipId[0];
-        computer ? computerDeployShip(currentPlayer) : deployingShips(currentPlayer);
+        computer ? computerDeployShips(currentBoard) : deployingShips(currentBoard);
       }
     }
   }
 };
 
-const readyTheField = (player) => {
-  Object.keys(player.board).forEach(key => {
-    player.board[key].tile.style[`background-color`] = `gray`;
+const readyTheField = (currentB) => {
+  Object.keys(currentB.board).forEach(key => {
+    currentB.board[key].tile.style[`background-color`] = `gray`;
   });
 };
 
 // Playing phase
-const playGame = (currentPlayer) => {
-  currentPlayer.board[crossHair.components[0]].tile.style[`background-color`] = `red`;
+const playGame = (currentB) => {
+  currentB.board[crossHair.components[0]].tile.style[`background-color`] = `red`;
 };
 
-const moveCrossHair = (player, keyCode) => {
+const moveCrossHair = (currentB, keyCode) => {
   if (keyCode !== 13 && keyCode !== 70) {
     //If the crosshair is at the boundaries
     if (!checkIfMoveable(crossHair, keyCode)) {
       return;
     }
-    crossHair.components[0] = changeTile(crossHair.components[0], keyCode, player);
-  } else if (keyCode === 13 && !player.board[crossHair.components[0]].shotAt) {
-    player.board[crossHair.components[0]].shotAt = true;
-    if (player.board[crossHair.components[0]].occupiedBy) {
+    crossHair.components[0] = changeTile(crossHair.components[0], keyCode, currentB);
+  } else if (keyCode === 13 && !currentB.board[crossHair.components[0]].shotAt) {
+    currentB.board[crossHair.components[0]].shotAt = true;
+    if (currentB.board[crossHair.components[0]].occupiedBy) {
 
-      const shipId = player.board[crossHair.components[0]].occupiedBy;
+      const shipId = currentB.board[crossHair.components[0]].occupiedBy;
       
-      player.board[crossHair.components[0]].componentIndex = true;
-      player.ships[shipId].status = `damaged`;
+      currentB.board[crossHair.components[0]].componentIndex = true;
+      currentB.ships[shipId].status = `damaged`;
     
-      if (player.ships[shipId].length > 0) {
-        player.ships[shipId].length -= 1;
-        if (checkIfAllShipsSunk(player.ships)) {
+      if (currentB.ships[shipId].length > 0) {
+        currentB.ships[shipId].length -= 1;
+        if (checkIfAllShipsSunk(currentB.ships)) {
           gameEnd = true;
-          console.log(player.nextPlayer.id, 'WON!');
+          logger(`${currentB.nextPlayer.id} WON!`);
           return;
         }
       }
 
-      console.log(player.nextPlayer.id, 'hits on:', player.board[crossHair.components[0]].id);
-      player.board[crossHair.components[0]].tile.style[`background-color`] = `brown`;
-
+      logger(`${currentB.nextPlayer.id} hits on: ${currentB.board[crossHair.components[0]].id}`);
+      currentB.board[crossHair.components[0]].tile.style[`background-color`] = `brown`;
+      currentBoard = currentB.nextPlayer
+      !computer ? playGame(currentBoard) : computerPlay(currentBoard);
     } else {
-      player.board[crossHair.components[0]].tile.style[`background-color`] = `blue`;
-      console.log(player.id, 'misses on', player.board[crossHair.components[0]].id);
-    }
-    if (!computer) {
-      currentPlayer = player.nextPlayer;
+      currentB.board[crossHair.components[0]].tile.style[`background-color`] = `blue`;
+      logger(`${currentB.nextPlayer.id} misses on: ${currentB.board[crossHair.components[0]].id}`);
+      currentBoard = currentB.nextPlayer;
+      !computer ? playGame(currentBoard) : computerPlay(currentBoard);
     }
   }
-
-  computer ? playGame(currentPlayer) : computerPlay();
-
+  
 };
 
 const checkIfAllShipsSunk = (ships) => {
   const shipsSunk = Object.keys(ships).filter(key => ships[key].length === 0);
-  console.log('Sunken ships of:', currentPlayer.id, shipsSunk);
+  logger(`Sunken ships of: ${currentBoard.id} ${shipsSunk}`);
   return shipsSunk.length === 5;
 };
-const computerPlay = () => {
 
+const computerPlay = (currentB) => {
+  let computerPlaying = true;
+  while(computerPlaying){
+    const hitLocation = `${Math.round(Math.random() * 9)}${Math.round(Math.random() * 9)}`;
+    if(!currentB.board[hitLocation].shotAt){
+      if(currentB.board[hitLocation].occupiedBy){
+        currentB.board[hitLocation].tile.style[`background-color`] = `brown`;
+        currentB.ships[currentB.board[hitLocation].occupiedBy].status = `damaged`;
+        currentB.ships[currentB.board[hitLocation].occupiedBy].length += 1;
+        logger(`Computer hits on ${hitLocation}`);
+      } else {
+        logger(`Computer misses on ${hitLocation}`);
+        currentB.board[hitLocation].tile.style[`background-color`] = `blue`;
+      }
+      currentB.board[hitLocation].shotAt = true;
+      computerPlaying = false;
+    }
+  }
+  currentBoard = currentB.nextPlayer
+  playGame(currentBoard);
 }
 
-const computerDeployShip = (player) => {
-
+const computerDeployShips = (currentB) => {
   for(let i = 0; i < 5; i ++){
 
     let shipId = battleShipId[i];
     let direction = Math.round(Math.random()) === 0 ? true : false;
     let startingLocation = undefined;
+    
     if(direction){
-      startingLocation = newPos.vertical(player.ships[battleShipId[i]].length);
+      startingLocation = newPos.vertical(currentB.ships[battleShipId[i]].length);
     } else {
-      startingLocation = newPos.horizontal(player.ships[battleShipId[i]].length);
+      startingLocation = newPos.horizontal(currentB.ships[battleShipId[i]].length);
     }
 
-    const randomPosition = player.ships[shipId].components.map((c, i) => {
+    const randomPosition = currentB.ships[shipId].components.map((c, i) => {
       const x = direction ? `${startingLocation[0]}` : `${Number(startingLocation[0]) + i}`;
       const y = direction ? `${Number(startingLocation[1]) + i}` : `${startingLocation[1]}`;
       const coordinates =`${x}${y}`;
       return coordinates;
     });
 
-    if(checkIfAIDeployable(player, randomPosition)){
-      player.ships[shipId].components = randomPosition;
+    if(checkIfAIDeployable(currentB, randomPosition)){
+      currentB.ships[shipId].components = randomPosition;
       randomPosition.forEach(p => {
-        player.board[p].tile.style[`background-color`] = `brown`;
-        player.board[p].occupiedBy = shipId;
-        player.board[p].componentIndex = i;
+        currentB.board[p].tile.style[`background-color`] = `brown`;
+        currentB.board[p].occupiedBy = shipId;
+        currentB.board[p].componentIndex = i;
       })
     } else {
       i --;
     }
   }
-  readyTheField(player);
-  gameStarted = true;
-  Math.round(Math.random()) === 0 ? playGame(currentPlayer) : computerPlay();
+  
+  readyTheField(currentB);
+  currentB.deployedAllShips = true;
+  if (!currentB.nextPlayer.deployedAllShips) {
+    currentBoard = currentBoard.nextPlayer
+    deployingShips(currentBoard);
+  } else {
+    gameStarted = true;
+    playGame(currentBoard);
+  }
 }
 
-const checkIfAIDeployable = (player, positions) => {
+const checkIfAIDeployable = (currentB, positions) => {
   // If there is a true in any tile the current ship is currently hovering then you cannot deploy
   const checkIfAvailable = positions.map(p => {
 
-    if (player.board[p].occupiedBy) {
+    if (currentB.board[p].occupiedBy) {
       return false;
     }
     return true;
@@ -472,11 +496,24 @@ const resetGame = () => {
     p2Ship.status = 'inactive';
     p2Ship.length = p2Ship.components.length;
   }
-
-  currentPlayer = computer ? playerOne : Math.round(Math.random()) === 0 ? playerOne : playerTwo;
-  console.log(currentPlayer.id, 'is first'); 
-  deployingShips(currentPlayer);
+  
+  currentBoard = Math.round(Math.random()) === 0 ? playerOne : playerTwo;
+  resetLogger();
+  logger(`${currentBoard.id} is first`);
+  computer ? currentBoard.id === 'p1' ? deployingShips(currentBoard) : computerDeployShips(currentBoard) : deployingShips(currentBoard);
 };
+
+const logger = (text) => {
+  const newLog = document.createElement('p')
+  newLog.textContent = `- ${text}`;
+  log.appendChild(newLog);
+}
+
+const resetLogger = () => {
+  while (log.firstChild) {
+    log.removeChild(log.firstChild);
+  }
+}
 
 // Create the grids
 createGrid(playerOneBoard, playerOne);
@@ -486,19 +523,19 @@ coordinateContext(columns, rows, letters);
 // Creating ship
 battleShipFactory(playerOne);
 battleShipFactory(playerTwo);
-console.log(currentPlayer.id, 'is first');
-deployingShips(currentPlayer);
+logger(`${currentBoard.id} is first`);
+deployingShips(currentBoard);
 
 document.addEventListener('keydown', (e) => {
   if (validKeyCodes[e.keyCode] && !gameStarted && !gameEnd) {
-    moveShip(currentPlayer, shipId, e.keyCode);
+    moveShip(currentBoard, shipId, e.keyCode);
   } else if (validKeyCodes[e.keyCode] && gameStarted && !gameEnd) {
-    moveCrossHair(currentPlayer, e.keyCode);
+    moveCrossHair(currentBoard, e.keyCode);
   } else if (e.keyCode === 82) {
     resetGame();
   } else if (e.keyCode === 67) {
     computer = !computer;
-    console.log('Computer is playing:', computer);
+    logger(`Computer is playing: ${computer}`);
     resetGame();
   }
 });
