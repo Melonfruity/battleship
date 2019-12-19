@@ -286,6 +286,7 @@ const checkIfMoveable = (ship, keyCode) => {
     return tail[0] !== '9';
   }
 };
+
 const checkIfDeployable = (currentB, shipId) => {
   // If there is a true in any tile the current ship is currently hovering then you cannot deploy
   const checkIfAvailable = currentB.ships[shipId].components.map(c => currentB.board[c].occupiedBy ? false : true);
@@ -446,7 +447,7 @@ const computerDeployShips = (currentB) => {
     }
   }
   
-  // readyTheField(currentB);
+  readyTheField(currentB);
   currentB.deployedAllShips = true;
   
   if (!currentB.nextPlayer.deployedAllShips) {
